@@ -1,10 +1,74 @@
+<?php
+session_start();
+
+// Vérification si l'utilisateur est connecté et est un avocat
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'lawyer') {
+    header('Location: ../auth/login-page.php');
+    exit;
+}
+
+// Configuration de la base de données
+$dsn = 'mysql:host=localhost;dbname=avocat_connect;charset=utf8';
+$username = 'root';
+$password = '';
+$options = [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+];
+
+try {
+    $pdo = new PDO($dsn, $username, $password, $options);
+
+    // Récupération des informations de l'avocat
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id_user = ? AND role = 'lawyer'");
+    $stmt->execute([$_SESSION['user_id']]);
+    $lawyer = $stmt->fetch();
+
+    // Récupération des rendez-vous en attente
+    // $stmt = $pdo->prepare("
+    //     SELECT r.*, u.first_name, u.last_name 
+    //     FROM reservations r 
+    //     JOIN users u ON r.client_id = u.id_user 
+    //     WHERE r.lawyer_id = ? 
+    //     ORDER BY r.date DESC, r.time DESC
+    // ");
+    // $stmt->execute([$_SESSION['user_id']]);
+    // $appointments = $stmt->fetchAll();
+
+    // Récupération de l'historique des consultations
+    // $stmt = $pdo->prepare("
+    //     SELECT c.*, u.first_name, u.last_name 
+    //     FROM consultations c 
+    //     JOIN users u ON c.client_id = u.id_user 
+    //     WHERE c.lawyer_id = ? 
+    //     ORDER BY c.date DESC, c.time DESC
+    // ");
+    // $stmt->execute([$_SESSION['user_id']]);
+    // $consultations = $stmt->fetchAll();
+
+} catch (PDOException $e) {
+    die('Erreur de connexion à la base de données : ' . $e->getMessage());
+}
+
+// Fonction pour gérer le statut des rendez-vous
+// function getStatusBadge($status) {
+//     switch($status) {
+//         case 'confirmed':
+//             return '<span class="badge bg-success">Confirmée</span>';
+//         case 'pending':
+//             return '<span class="badge bg-dark">En Attente</span>';
+//         case 'cancelled':
+//             return '<span class="badge bg-danger">Annulée</span>';
+//         default:
+//             return '<span class="badge bg-secondary">Statut inconnu</span>';
+//     }
+// }
+?>
 
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-    <meta charset="utf-8">
-    <title>Avocat Connect | HOME</title>
+<meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="" name="keywords">
     <meta content="" name="description">
@@ -27,19 +91,13 @@
 
     <!-- Template Stylesheet -->
     <link href="../../assets/css/style.css" rel="stylesheet">
+    <!-- Vos balises head restent identiques -->
+    <title>Dashboard Avocat - <?php echo htmlspecialchars($lawyer['first_name'] . ' ' . $lawyer['last_name']); ?></title>
 </head>
 
 <body>
     <div class="container-xxl bg-white p-0">
-        <!-- Spinner Start -->
-        <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-        </div>
-        <!-- Spinner End -->
-
-        <!-- Navbar & Hero Start -->
+        <!-- Navbar and Hero Start -->
         <div class="container-xxl position-relative p-0">
             <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 px-lg-5 py-3 py-lg-0">
                 <a href="" class="navbar-brand p-0">
@@ -50,7 +108,7 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <div class="navbar-nav ms-auto py-0 pe-4">
-                        <a href="index.html" class="nav-item nav-link active">Accueil</a>
+                        <a href="home.php" class="nav-item nav-link active">Accueil</a>
                         <a href="#about-section" class="nav-item nav-link">A propos</a>
                         <a href="service.html" class="nav-item nav-link">Services</a>
                         <a href="menu.html" class="nav-item nav-link">Menu</a>
@@ -64,148 +122,169 @@
                         </div>
                         <a href="contact.html" class="nav-item nav-link">Contact</a>
                     </div>
-                    <a href="" class="btn btn-primary py-2 px-4"><i class="fa-solid fa-right-from-bracket"></i> SE DECONNECTER</a>
                 </div>
             </nav>
-
             <div class="container-xxl py-5 bg-dark hero-header mb-5">
-                <div class="container">
+                <div class="container my-5 py-5">
                     <div class="row align-items-center g-5">
-                        <div class="col-lg-8 text-center text-lg-start">
+                        <div class="col-lg-6 text-center text-lg-start">
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <!-- Navbar & Hero End -->
-         <!-- ----------------------------------------- -->
-         <div class="container mt-4">
-        <div class="row">
-            <div class="col-lg-3">
-                <div class="card shadow-sm">
+
+        <!-- Contenu principal -->
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="card shadow-sm">
                     <div class="card-body text-center">
-                        <img src="../../assets/images/testimonial-2.jpg" alt="lawyer_photo" class="rounded-circle mb-3" width="100">
-                        <h5 class="card-title">Nom de l'avocat</h5>
-                        <p class="text-muted">client.email@example.com</p>
-                        <a href="#" class="btn btn-primary btn-sm">Modifier le Profil</a>
+                        <?php if ($lawyer && !empty($lawyer['photo'])): ?>
+                            <?php
+                            // Puisque l'image est accessible via /avocatconnect/assets/...
+                            $photo_url = '/avocatconnect/assets/images/uploads/' . basename($lawyer['photo']);
+                            ?>
+                            <img src="<?php echo htmlspecialchars($photo_url); ?>" 
+                                alt="Photo de <?php echo htmlspecialchars($lawyer['first_name']); ?>" 
+                                class="rounded-circle mb-3" 
+                                width="100">
+                        <?php else: ?>
+                            <img src="../../assets/images/avatar-neutre.png" 
+                                alt="avatar-neutre" 
+                                class="rounded-circle mb-3" 
+                                width="100">
+                        <?php endif; ?>
+                        <h5 class="card-title">
+                            <?php echo htmlspecialchars($lawyer['first_name'] . ' ' . $lawyer['last_name']); ?>
+                        </h5>
+                        <p class="text-muted"><?php echo htmlspecialchars($lawyer['email']); ?></p>
+                        <a href="edit-profile.php" class="btn btn-primary btn-sm">Modifier le Profil</a>
                     </div>
-                </div>
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h6 class="card-title">Biographie :</h6>
-                        <p class="text-muted">après le bac que j'ai eu en 2010, j'ai poursuivi mes études
-                            en faculté de droit de Rabat dans laquelle j'ai pris ma license en droit
-                            des affaires internationales ..
-                        </p>
-                        <h6 class="card-title">Spécialtées :</h6>
-                        <span>- Droit internationale</span><br>
-                        <span>- Droit internationale</span><br>
-                        <h6 class="card-title">Cordonnées :</h6>
-                        <span>- 25, Avenue Khawarizmi, Rabat</span><br>
-                    </div>
-                </div>
-            </div>
 
-            <div class="col-lg-9">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h6>Demandes de réservation</h6>
+
                     </div>
-                    <div class="card-body">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Nom du client</th>
-                                    <th>date</th>
-                                    <th>Heure</th>
-                                    <th>Statut</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Me. Dupont</td>
-                                    <td>25/12/2024</td>
-                                    <td>10:30</td>
-                                    <td><span class="badge bg-success">Confirmée</span></td>
-                                    <td>
-                                        <button class="btn btn-primary btn-sm">Accepter</button>
-                                        <button class="btn btn-danger btn-sm">Rejeter</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Me. Durand</td>
-                                    <td>21/12/2024</td>
-                                    <td>14:00</td>
-                                    <td><span class="badge bg-dark">En Attente</span></td>
-                                    <td>
-                                        <button class="btn btn-primary btn-sm">Accepter</button>
-                                        <button class="btn btn-danger btn-sm">Rejeter</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="card shadow-sm mt-3">
+                        <div class="card-body">
+                            <h6 class="card-title">Biographie :</h6>
+                            <p class="text-muted">
+                                <?php echo nl2br(htmlspecialchars($lawyer['user_description'] ?? 'Aucune biographie disponible')); ?>
+                            </p>
+                            <h6 class="card-title">Spécialités :</h6>
+                            <?php 
+                            $specialties = explode(',', $lawyer['user_description']);
+                            foreach($specialties as $specialty): ?>
+                                <span>- <?php echo htmlspecialchars(trim($specialty)); ?></span><br>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        <h6>Historique des Consultations</h6>
+                <!-- Section des rendez-vous -->
+                <div class="col-lg-9">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h6>Demandes de réservation</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nom du client</th>
+                                        <th>Date</th>
+                                        <th>Heure</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                
+                            </table>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Nom du Client</th>
-                                    <th>Date</th>
-                                    <th>Heure</th>
-                                    <th>Feedback</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Me. Martin</td>
-                                    <td>15/12/2024</td>
-                                    <td>09:00</td>
-                                    <td>
-                                        <button class="btn btn-info btn-sm">Laisser un avis</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Me. Bernard</td>
-                                    <td>10/12/2024</td>
-                                    <td>16:00</td>
-                                    <td><span class="text-muted">Avis laissé</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <!-- Historique des consultations -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h6>Historique des Consultations</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nom du Client</th>
+                                        <th>Date</th>
+                                        <th>Heure</th>
+                                        <th>Feedback</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-         <!-- ----------------------------------------- -->
 
         <!-- Footer Start -->
         <div class="container-fluid bg-dark text-light footer pt-5 mt-5 wow fadeIn" data-wow-delay="0.1s">
+            <div class="container py-5">
+                <div class="row g-5">
+                    <div class="col-lg-3 col-md-6">
+                        <h4 class="section-title ff-secondary text-start text-primary fw-normal mb-4">Company</h4>
+                        <a class="btn btn-link" href="">About Us</a>
+                        <a class="btn btn-link" href="">Contact Us</a>
+                        <a class="btn btn-link" href="">Reservation</a>
+                        <a class="btn btn-link" href="">Privacy Policy</a>
+                        <a class="btn btn-link" href="">Terms & Condition</a>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <h4 class="section-title ff-secondary text-start text-primary fw-normal mb-4">Contact</h4>
+                        <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>123 Street, New York, USA</p>
+                        <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+012 345 67890</p>
+                        <p class="mb-2"><i class="fa fa-envelope me-3"></i>info@example.com</p>
+                        <div class="d-flex pt-2">
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-youtube"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <h4 class="section-title ff-secondary text-start text-primary fw-normal mb-4">Opening</h4>
+                        <h5 class="text-light fw-normal">Monday - Saturday</h5>
+                        <p>09AM - 09PM</p>
+                        <h5 class="text-light fw-normal">Sunday</h5>
+                        <p>10AM - 08PM</p>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <h4 class="section-title ff-secondary text-start text-primary fw-normal mb-4">Newsletter</h4>
+                        <p>Dolor amet sit justo amet elitr clita ipsum elitr est.</p>
+                        <div class="position-relative mx-auto" style="max-width: 400px;">
+                            <input class="form-control border-primary w-100 py-3 ps-4 pe-5" type="text" placeholder="Your email">
+                            <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2">SignUp</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="container">
                 <div class="copyright">
                     <div class="row">
                         <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                            &copy; <a class="border-bottom" href="../shared/home.php">Avocat Connect</a>, All Right Reserved. 
-							Designed By <a class="border-bottom" href="https://dadssi.github.io/Portfolio/">d4dssi</a><br><br>
-                            Distributed By Youcode
+                            &copy; <a class="border-bottom" href="#">Your Site Name</a>, All Right Reserved. 
+							
+							<!--/*** This template is free as long as you keep the footer author’s credit link/attribution link/backlink. If you'd like to use the template without the footer author’s credit link/attribution link/backlink, you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". Thank you for your support. ***/-->
+							Designed By <a class="border-bottom" href="https://htmlcodex.com">HTML Codex</a><br><br>
+                            Distributed By <a class="border-bottom" href="https://themewagon.com" target="_blank">ThemeWagon</a>
                         </div>
                         <div class="col-md-6 text-center text-md-end">
                             <div class="footer-menu">
-                                <a href="../shared/home.php">Home</a>
-                                <a href="../legal/cookies.php">Cookies</a>
+                                <a href="">Home</a>
+                                <a href="">Cookies</a>
                                 <a href="">Help</a>
                                 <a href="">FQAs</a>
                             </div>
@@ -221,148 +300,56 @@
         <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
     </div>
 
-    <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/lib/wow/wow.min.js"></script>
-    <script src="../../assets/lib/easing/easing.min.js"></script>
-    <script src="../../assets/lib/waypoints/waypoints.min.js"></script>
-    <script src="../../assets/lib/counterup/counterup.min.js"></script>
-    <script src="../../assets/lib/owlcarousel/owl.carousel.min.js"></script>
-    <script src="../../assets/lib/tempusdominus/js/moment.min.js"></script>
-    <script src="../../assets/lib/tempusdominus/js/moment-timezone.min.js"></script>
-    <script src="../../assets/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
-
-    <!-- Template Javascript -->
-    <!-- <script src="js/main.js"></script> -->
-    <script src="../../assets/js/main.js"></script>
-     <script>
-        const signUpButton = document.getElementById('signUp');
-			const signInButton = document.getElementById('signIn');
-			const container = document.getElementById('container1');
-
-			signUpButton.addEventListener('click', () => {
-				container.classList.add('right-panel-active');
-			});
-
-			signInButton.addEventListener('click', () => {
-				container.classList.remove('right-panel-active');
-			});
-
-            //----------------------------
-            const wrapper = document.querySelector('.wrapper')
-            const registerLink = document.querySelector('.register-link')
-            const loginLink = document.querySelector('.login-link')
-            
-            registerLink.onclick = () => {
-                wrapper.classList.add('active')
-            }
-            
-            loginLink.onclick = () => {
-                wrapper.classList.remove('active')
-            }
-     </script>
-</body>
-
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-</head>
-
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-        <div class="container">
-            <a class="navbar-brand" href="#">Cabinet d'Avocats</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Accueil</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Profil</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Déconnexion</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
+    <!-- JavaScript Libraries restent identiques -->
     
+    <!-- Ajout du script pour gérer les actions -->
+    <script>
+    function updateStatus(appointmentId, status) {
+        if (confirm('Êtes-vous sûr de vouloir ' + (status === 'confirmed' ? 'accepter' : 'rejeter') + ' ce rendez-vous ?')) {
+            fetch('update-appointment.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    appointment_id: appointmentId,
+                    status: status
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Une erreur est survenue. Veuillez réessayer.');
+                }
+            });
+        }
+    }
 
-    <footer class="bg-light text-center py-3 mt-4">
-        <p class="mb-0">&copy; 2024 Cabinet d'Avocats. Tous droits réservés.</p>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    function addFeedback(consultationId) {
+        const feedback = prompt('Veuillez entrer votre avis sur cette consultation :');
+        if (feedback) {
+            fetch('add-feedback.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    consultation_id: consultationId,
+                    feedback: feedback
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Une erreur est survenue. Veuillez réessayer.');
+                }
+            });
+        }
+    }
+    </script>
 </body>
-
-</html> -->
-
+</html>

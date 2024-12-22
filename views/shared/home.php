@@ -3,7 +3,6 @@ define('ALLOW_ACCESS', true);
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
 
-// Vous pouvez maintenant utiliser $connection pour vos requêtes SQL
 
 ?>
 <!DOCTYPE html>
@@ -30,11 +29,6 @@ require_once __DIR__ . '/../../config/database.php';
 
 <body>
     <div class="container-xxl bg-white p-0">
-        <!-- <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-        </div> -->
         <!-- Navbar & Hero Start -->
         <div class="container-xxl position-relative p-0">
             <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 px-lg-5 py-3 py-lg-0">
@@ -47,18 +41,11 @@ require_once __DIR__ . '/../../config/database.php';
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <div class="navbar-nav ms-auto py-0 pe-4">
                         <a href="#" class="nav-item nav-link active">Accueil</a>
-                        <a href="#about-section" class="nav-item nav-link">A propos</a>
                         <a href="#services" class="nav-item nav-link">Services</a>
+                        <a href="#about-section" class="nav-item nav-link">A propos</a>
                         <a href="#blog" class="nav-item nav-link">blog</a>
-                        <div class="nav-item dropdown">
-                            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Pages</a>
-                            <div class="dropdown-menu m-0">
-                                <a href="booking.html" class="dropdown-item">Booking</a>
-                                <a href="team.html" class="dropdown-item">Our Team</a>
-                                <a href="testimonial.html" class="dropdown-item">Testimonial</a>
-                            </div>
-                        </div>
-                        <a href="contact.html" class="nav-item nav-link">Contact</a>
+                        <a href="lawyers-list.php" class="nav-item nav-link">Nos avocats</a>
+                        <a href="#footer" class="nav-item nav-link">Contact</a>
                     </div>
                     <a href="login-page.php" class="btn btn-primary py-2 px-4">SE CONNECTER</a>
                 </div>
@@ -168,7 +155,7 @@ require_once __DIR__ . '/../../config/database.php';
                                 </div>
                             </div>
                         </div>
-                        <a class="btn btn-primary py-3 px-5 mt-2" href="">découvrir nos éxperts</a>
+                        <a class="btn btn-primary py-3 px-5 mt-2" href="lawyers-list.php">découvrir nos éxperts</a>
                     </div>
                 </div>
             </div>
@@ -574,22 +561,22 @@ require_once __DIR__ . '/../../config/database.php';
         </div>
         <!-- Testimonial End -->
         <!-- Footer Start -->
-        <div class="container-fluid bg-dark text-light footer pt-5 mt-5 wow fadeIn" data-wow-delay="0.1s">
+        <div class="container-fluid bg-dark text-light footer pt-5 mt-5 wow fadeIn" data-wow-delay="0.1s" id="footer">
             <div class="container py-5">
                 <div class="row g-5">
-                    <div class="col-lg-3 col-md-6">
-                        <h4 class="section-title ff-secondary text-start text-primary fw-normal mb-4">Company</h4>
-                        <a class="btn btn-link" href="">About Us</a>
-                        <a class="btn btn-link" href="">Contact Us</a>
-                        <a class="btn btn-link" href="">Reservation</a>
-                        <a class="btn btn-link" href="">Privacy Policy</a>
-                        <a class="btn btn-link" href="">Terms & Condition</a>
+                    <div class="col-lg-4 col-md-6">
+                        <h4 class="section-title ff-secondary text-start text-primary fw-normal mb-4">Avocat Connect</h4>
+                        <a class="btn btn-link" href="#about-section">A propos</a>
+                        <a class="btn btn-link" href="#footer">Contact</a>
+                        <a class="btn btn-link" href="#services">Services</a>
+                        <a class="btn btn-link" href="#blog">Blog</a>
+                        <a class="btn btn-link" href="../legal/terms.php">Terms</a>
                     </div>
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-4 col-md-6">
                         <h4 class="section-title ff-secondary text-start text-primary fw-normal mb-4">Contact</h4>
-                        <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>123 Street, New York, USA</p>
-                        <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+012 345 67890</p>
-                        <p class="mb-2"><i class="fa fa-envelope me-3"></i>info@example.com</p>
+                        <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>Centre Ville, Safi, Maroc</p>
+                        <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+212 6 66 66 66 66</p>
+                        <p class="mb-2"><i class="fa fa-envelope me-3"></i>avocatconnect@gmail.com</p>
                         <div class="d-flex pt-2">
                             <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-twitter"></i></a>
                             <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-facebook-f"></i></a>
@@ -597,19 +584,12 @@ require_once __DIR__ . '/../../config/database.php';
                             <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-linkedin-in"></i></a>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-6">
-                        <h4 class="section-title ff-secondary text-start text-primary fw-normal mb-4">Opening</h4>
-                        <h5 class="text-light fw-normal">Monday - Saturday</h5>
-                        <p>09AM - 09PM</p>
-                        <h5 class="text-light fw-normal">Sunday</h5>
-                        <p>10AM - 08PM</p>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-4 col-md-6">
                         <h4 class="section-title ff-secondary text-start text-primary fw-normal mb-4">Newsletter</h4>
-                        <p>Dolor amet sit justo amet elitr clita ipsum elitr est.</p>
+                        <p>Veuillez saisir votre mail pour être informé de toutes nos nouveautés</p>
                         <div class="position-relative mx-auto" style="max-width: 400px;">
-                            <input class="form-control border-primary w-100 py-3 ps-4 pe-5" type="text" placeholder="Your email">
-                            <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2">SignUp</button>
+                            <input class="form-control border-primary w-100 py-3 ps-4 pe-5" type="text" placeholder="Votre email">
+                            <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2">Envoyer</button>
                         </div>
                     </div>
                 </div>
@@ -618,18 +598,16 @@ require_once __DIR__ . '/../../config/database.php';
                 <div class="copyright">
                     <div class="row">
                         <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                            &copy; <a class="border-bottom" href="#">Your Site Name</a>, All Right Reserved. 
-							
-							<!--/*** This template is free as long as you keep the footer author’s credit link/attribution link/backlink. If you'd like to use the template without the footer author’s credit link/attribution link/backlink, you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". Thank you for your support. ***/-->
-							Designed By <a class="border-bottom" href="https://htmlcodex.com">HTML Codex</a><br><br>
-                            Distributed By <a class="border-bottom" href="https://themewagon.com" target="_blank">ThemeWagon</a>
+                            &copy; <a class="border-bottom" href="#">Avocat Connect</a>, Tous droits réservés. 
+							Designed By <a class="border-bottom" href="https://dadssi.github.io/Portfolio/">d4dssi</a><br><br>
+                            Distributed By <a class="border-bottom" href="https://www.youcode.ma/" target="_blank">Youcode</a>
                         </div>
                         <div class="col-md-6 text-center text-md-end">
                             <div class="footer-menu">
-                                <a href="">Home</a>
-                                <a href="">Cookies</a>
-                                <a href="">Help</a>
-                                <a href="">FQAs</a>
+                                <a href="#">Home</a>
+                                <a href="../legal/cookies.php">Cookies</a>
+                                <a href="#">Help</a>
+                                <a href="#">FQAs</a>
                             </div>
                         </div>
                     </div>
@@ -654,7 +632,6 @@ require_once __DIR__ . '/../../config/database.php';
     <script src="lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
 
     <!-- Template Javascript -->
-    <script src="js/main.js"></script>
     <script src="../../assets/js/main.js"></script>
 </body>
 

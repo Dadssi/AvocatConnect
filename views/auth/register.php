@@ -1,5 +1,8 @@
 <?php
-// register.php
+define('ALLOW_ACCESS', true);
+require_once __DIR__ . '/../../config/config.php';
+
+
 
 // Configuration de la base de données
 $dsn = 'mysql:host=localhost;dbname=avocat_connect;charset=utf8';
@@ -30,10 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $specialties = $_POST['specialties'] ?? [];
     $experience_years = $_POST['experience_years'] ?? '';
 
-    echo $experience_years;
     // Photo upload
     $photo = $_FILES['user_photo'] ?? null;
-    $photo_path = '';
+    $photo_path = UPLOADS_PATH;
 
     // Vérifications
     if (empty($first_name)) $errors[] = "Le prénom est obligatoire.";
@@ -51,42 +53,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!in_array($photo['type'], $allowed_types)) {
             $errors[] = "Le format de la photo est invalide.";
         } else {
-            $upload_dir = 'uploads/';
+            $upload_dir = UPLOADS_PATH; // Répertoire défini dans config.php
             if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
+                mkdir($upload_dir, 0755, true); // Création du dossier si nécessaire
             }
             $photo_path = $upload_dir . uniqid() . '-' . basename($photo['name']);
-            move_uploaded_file($photo['tmp_name'], $photo_path);
+            if (!move_uploaded_file($photo['tmp_name'], $photo_path)) {
+                $errors[] = "Échec du téléchargement de la photo.";
+            }
         }
-    } else {
-        $errors[] = "Une photo est obligatoire.";
     }
+    
 
     // Insertion dans la base de données
     if (empty($errors)) {
         $hashed_password = password_hash($password, PASSWORD_ARGON2ID);
-        $sql = "INSERT INTO users (first_name, last_name, age, email, password, registration_date, role, user_description, photo, experience_years) 
-                VALUES (:first_name, :last_name, :age, :email, :password, NOW(), :role, :user_description, :photo, :experience_years)";
+        
+        try {
+            $sql = "INSERT INTO users (first_name, last_name, age, email, password, registration_date, role, user_description, photo, experience_years) 
+                    VALUES (:first_name, :last_name, :age, :email, :password, NOW(), :role, :user_description, :photo, :experience_years)";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':first_name' => $first_name,
+                ':last_name' => $last_name,
+                ':age' => $age,
+                ':email' => $email,
+                ':password' => $hashed_password,
+                ':role' => $role,
+                ':user_description' => ($role === 'lawyer') ? implode(', ', $specialties) : null,
+                ':photo' => $photo_path,
+                ':experience_years' => ($role === 'lawyer') ? $experience_years : null,
+            ]);
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ':first_name' => $first_name,
-            ':last_name' => $last_name,
-            ':age' => $age,
-            ':email' => $email,
-            ':password' => $hashed_password,
-            ':role' => $role,
-            ':user_description' => ($role === 'lawyer') ? implode(', ', $specialties) : null,
-            ':photo' => $photo_path,
-            ':experience_years' => ($role === 'lawyer') ? $experience_years : null,
-        ]);
-
-        header('Location: login.php');
-        exit;
-    } else {
-        foreach ($errors as $error) {
-            echo "<p style='color:red;'>$error</p>";
+            // Redirection vers login-page.php au lieu de login.php
+            header('Location: ../shared/login-page.php');
+            exit;
+        } catch (PDOException $e) {
+            $errors[] = "Erreur lors de l'inscription : " . $e->getMessage();
         }
+    }
+}
+// Affichage des erreurs
+if (!empty($errors)) {
+    foreach ($errors as $error) {
+        echo "<p style='color:red;'>$error</p>";
     }
 }
 ?>

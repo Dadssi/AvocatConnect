@@ -18,7 +18,7 @@ define('ASSETS_URL', BASE_URL . '/assets');
 define('CONTROLLERS_PATH', ROOT_PATH . '/controllers');
 define('MODELS_PATH', ROOT_PATH . '/models');
 define('VIEWS_PATH', ROOT_PATH . '/views');
-define('UPLOADS_PATH', ROOT_PATH . '/uploads');
+define('UPLOADS_PATH', ROOT_PATH . '/assets/images/uploads/');
 
 // Configuration de l'application
 define('APP_NAME', 'AvocatConnect');
